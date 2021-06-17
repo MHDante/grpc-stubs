@@ -1,16 +1,16 @@
 from collections import abc
-from typing import Any, Iterator, List, Tuple, Union
+from typing import Any, Collection, Iterable, Iterator, List, Tuple, Union
 
 
 MetadataKey = str
 MetadataValue = Union[str, bytes]
 
 
-class Metadata(abc.Mapping):
+class Metadata(abc.Mapping, Collection[Tuple[MetadataKey, MetadataValue]]):
     def __init__(self, *args: Tuple[MetadataKey, MetadataValue]) -> None: ...
 
     @classmethod
-    def from_tuple(cls: Any, raw_metadata: tuple) -> Any: ...
+    def from_tuple(cls: Any, raw_metadata: Iterable[Tuple[MetadataKey, MetadataValue]]) -> Any: ...
 
     def add(self, key: MetadataKey, value: MetadataValue) -> None: ...
 
@@ -30,7 +30,7 @@ class Metadata(abc.Mapping):
 
     def set_all(self, key: MetadataKey, values: List[MetadataValue]) -> None: ...
 
-    def __contains__(self, key: MetadataKey) -> bool: ...
+    def __contains__(self, key: object) -> bool: ...
 
     def __eq__(self, other: Any) -> bool: ...
 

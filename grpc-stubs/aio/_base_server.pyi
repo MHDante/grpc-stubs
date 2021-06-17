@@ -2,14 +2,14 @@ import abc
 import grpc
 from ._metadata import Metadata
 from ._typing import RequestType, ResponseType
-from typing import Iterable, Mapping, Optional, Sequence
+from typing import Any, Generic, Iterable, Mapping, Optional, Sequence
 
 
 class Server(abc.ABC, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def add_generic_rpc_handlers(
         self,
-        generic_rpc_handlers: Sequence[grpc.GenericRpcHandler]
+        generic_rpc_handlers: Sequence[grpc.GenericRpcHandler[Any,Any]]
     ) -> None: ...
 
     @abc.abstractmethod
@@ -35,7 +35,7 @@ class Server(abc.ABC, metaclass=abc.ABCMeta):
     ) -> bool: ...
 
 
-class ServicerContext(abc.ABC, metaclass=abc.ABCMeta):
+class ServicerContext(Generic[RequestType, ResponseType], abc.ABC, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     async def read(self) -> RequestType: ...
 

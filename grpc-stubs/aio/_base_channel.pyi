@@ -5,12 +5,14 @@ from ._metadata import Metadata as Metadata
 from ._typing import (
     DeserializingFunction,
     RequestIterableType,
-    SerializingFunction
+    SerializingFunction,
+    RequestType,
+    ResponseType
 )
-from typing import Any, Optional
+from typing import Any, Generic, Optional
 
 
-class UnaryUnaryMultiCallable(abc.ABC, metaclass=abc.ABCMeta):
+class UnaryUnaryMultiCallable(Generic[RequestType, ResponseType],abc.ABC, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def __call__(
         self,
@@ -21,10 +23,10 @@ class UnaryUnaryMultiCallable(abc.ABC, metaclass=abc.ABCMeta):
         credentials: Optional[grpc.CallCredentials]=...,
         wait_for_ready: Optional[bool]=...,
         compression: Optional[grpc.Compression]=...
-    ) -> _base_call.UnaryUnaryCall: ...
+    ) -> _base_call.UnaryUnaryCall[RequestType, ResponseType]: ...
 
 
-class UnaryStreamMultiCallable(abc.ABC, metaclass=abc.ABCMeta):
+class UnaryStreamMultiCallable(Generic[RequestType, ResponseType], abc.ABC, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def __call__(
         self, 
@@ -35,10 +37,10 @@ class UnaryStreamMultiCallable(abc.ABC, metaclass=abc.ABCMeta):
         credentials: Optional[grpc.CallCredentials]=...,
         wait_for_ready: Optional[bool]=...,
         compression: Optional[grpc.Compression]=...
-    ) -> _base_call.UnaryStreamCall: ...
+    ) -> _base_call.UnaryStreamCall[RequestType, ResponseType]: ...
 
 
-class StreamUnaryMultiCallable(abc.ABC, metaclass=abc.ABCMeta):
+class StreamUnaryMultiCallable(Generic[RequestType, ResponseType], abc.ABC, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def __call__(
         self,
@@ -48,10 +50,10 @@ class StreamUnaryMultiCallable(abc.ABC, metaclass=abc.ABCMeta):
         credentials: Optional[grpc.CallCredentials]=...,
         wait_for_ready: Optional[bool]=...,
         compression: Optional[grpc.Compression]=...
-    ) -> _base_call.StreamUnaryCall: ...
+    ) -> _base_call.StreamUnaryCall[RequestType, ResponseType]: ...
 
 
-class StreamStreamMultiCallable(abc.ABC, metaclass=abc.ABCMeta):
+class StreamStreamMultiCallable(Generic[RequestType, ResponseType], abc.ABC, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def __call__(
         self,
@@ -61,7 +63,7 @@ class StreamStreamMultiCallable(abc.ABC, metaclass=abc.ABCMeta):
         credentials: Optional[grpc.CallCredentials]=...,
         wait_for_ready: Optional[bool]=...,
         compression: Optional[grpc.Compression]=...
-    ) -> _base_call.StreamStreamCall: ...
+    ) -> _base_call.StreamStreamCall[RequestType, ResponseType]: ...
 
 
 class Channel(abc.ABC, metaclass=abc.ABCMeta):
@@ -90,30 +92,30 @@ class Channel(abc.ABC, metaclass=abc.ABCMeta):
     def unary_unary(
         self,
         method: str,
-        request_serializer: Optional[SerializingFunction]=...,
-        response_deserializer: Optional[DeserializingFunction]=...
-    ) -> UnaryUnaryMultiCallable: ...
+        request_serializer: Optional[SerializingFunction[RequestType]]=...,
+        response_deserializer: Optional[DeserializingFunction[ResponseType]]=...
+    ) -> UnaryUnaryMultiCallable[RequestType, ResponseType]: ...
 
     @abc.abstractmethod
     def unary_stream(
         self,
         method: str,
-        request_serializer: Optional[SerializingFunction]=...,
-        response_deserializer: Optional[DeserializingFunction]=...
-    ) -> UnaryStreamMultiCallable: ...
+        request_serializer: Optional[SerializingFunction[RequestType]]=...,
+        response_deserializer: Optional[DeserializingFunction[ResponseType]]=...
+    ) -> UnaryStreamMultiCallable[RequestType, ResponseType]: ...
 
     @abc.abstractmethod
     def stream_unary(
         self,
         method: str,
-        request_serializer: Optional[SerializingFunction]=...,
-        response_deserializer: Optional[DeserializingFunction]=...
-    ) -> StreamUnaryMultiCallable: ...
+        request_serializer: Optional[SerializingFunction[RequestType]]=...,
+        response_deserializer: Optional[DeserializingFunction[ResponseType]]=...
+    ) -> StreamUnaryMultiCallable[RequestType, ResponseType]: ...
 
     @abc.abstractmethod
     def stream_stream(
         self,
         method: str,
-        request_serializer: Optional[SerializingFunction]=...,
-        response_deserializer: Optional[DeserializingFunction]=...
-    ) -> StreamStreamMultiCallable: ...
+        request_serializer: Optional[SerializingFunction[RequestType]]=...,
+        response_deserializer: Optional[DeserializingFunction[ResponseType]]=...
+    ) -> StreamStreamMultiCallable[RequestType, ResponseType]: ...

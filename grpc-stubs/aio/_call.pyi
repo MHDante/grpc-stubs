@@ -11,8 +11,9 @@ from ._typing import (
     ResponseType,
     SerializingFunction
 )
-from grpc._cython import cygrpc
-from typing import AsyncIterable, Optional
+import grpc._cython.cygrpc as cygrpc
+
+from typing import AsyncIterable, Awaitable, Generic, Optional
 
 class AioRpcError(grpc.RpcError):
     def __init__(
@@ -35,13 +36,13 @@ class AioRpcError(grpc.RpcError):
     def debug_error_string(self) -> str: ...
 
 
-class Call:
+class Call(Generic[RequestType, ResponseType]):
     def __init__(
         self,
         cython_call: cygrpc._AioCall,
         metadata: Metadata,
-        request_serializer: SerializingFunction,
-        response_deserializer: DeserializingFunction,
+        request_serializer: SerializingFunction[RequestType],
+        response_deserializer: DeserializingFunction[ResponseType],
         loop: asyncio.AbstractEventLoop
     ) -> None: ...
 
@@ -74,13 +75,13 @@ class _APIStyle(enum.IntEnum):
     READER_WRITER: int = ...
 
 
-class _UnaryResponseMixin(Call):
+class _UnaryResponseMixin(Call[RequestType, ResponseType]):
     def cancel(self) -> bool: ...
 
-    def __await__(self) -> ResponseType: ...
+    def __await__(self) -> Awaitable[ResponseType]: ...
 
 
-class _StreamResponseMixin(Call):
+class _StreamResponseMixin(Call[RequestType, ResponseType]):
     def cancel(self) -> bool: ...
 
     def __aiter__(self) -> AsyncIterable[ResponseType]: ...
@@ -88,7 +89,7 @@ class _StreamResponseMixin(Call):
     async def read(self) -> ResponseType: ...
 
 
-class _StreamRequestMixin(Call):
+class _StreamRequestMixin(Call[RequestType, ResponseType]):
     def cancel(self) -> bool: ...
 
     async def write(self, request: RequestType) -> None: ...
@@ -98,7 +99,7 @@ class _StreamRequestMixin(Call):
     async def wait_for_connection(self) -> None: ...
 
 
-class UnaryUnaryCall(_UnaryResponseMixin, Call, _base_call.UnaryUnaryCall):
+class UnaryUnaryCall(_UnaryResponseMixin[RequestType, ResponseType], Call[RequestType, ResponseType], _base_call.UnaryUnaryCall[RequestType, ResponseType]):
     def __init__(
         self,
         request: RequestType,
@@ -108,15 +109,15 @@ class UnaryUnaryCall(_UnaryResponseMixin, Call, _base_call.UnaryUnaryCall):
         wait_for_ready: Optional[bool],
         channel: cygrpc.AioChannel,
         method: bytes,
-        request_serializer: SerializingFunction,
-        response_deserializer: DeserializingFunction,
+        request_serializer: SerializingFunction[RequestType],
+        response_deserializer: DeserializingFunction[ResponseType],
         loop: asyncio.AbstractEventLoop
     ) -> None: ...
 
     async def wait_for_connection(self) -> None: ...
 
 
-class UnaryStreamCall(_StreamResponseMixin, Call, _base_call.UnaryStreamCall):
+class UnaryStreamCall(_StreamResponseMixin[RequestType, ResponseType], Call[RequestType, ResponseType], _base_call.UnaryStreamCall):
     def __init__(
         self,
         request: RequestType,
@@ -126,15 +127,15 @@ class UnaryStreamCall(_StreamResponseMixin, Call, _base_call.UnaryStreamCall):
         wait_for_ready: Optional[bool],
         channel: cygrpc.AioChannel,
         method: bytes,
-        request_serializer: SerializingFunction,
-        response_deserializer: DeserializingFunction,
+        request_serializer: SerializingFunction[RequestType],
+        response_deserializer: DeserializingFunction[ResponseType],
         loop: asyncio.AbstractEventLoop
     ) -> None: ...
 
     async def wait_for_connection(self) -> None: ...
 
 
-class StreamUnaryCall(_StreamRequestMixin, _UnaryResponseMixin, Call, _base_call.StreamUnaryCall):
+class StreamUnaryCall(_StreamRequestMixin[RequestType, ResponseType], _UnaryResponseMixin[RequestType, ResponseType], Call[RequestType, ResponseType], _base_call.StreamUnaryCall):
     def __init__(
         self,
         request_iterator: Optional[RequestIterableType],
@@ -144,13 +145,13 @@ class StreamUnaryCall(_StreamRequestMixin, _UnaryResponseMixin, Call, _base_call
         wait_for_ready: Optional[bool],
         channel: cygrpc.AioChannel,
         method: bytes,
-        request_serializer: SerializingFunction,
-        response_deserializer: DeserializingFunction,
+        request_serializer: SerializingFunction[RequestType],
+        response_deserializer: DeserializingFunction[ResponseType],
         loop: asyncio.AbstractEventLoop
     ) -> None: ...
 
 
-class StreamStreamCall(_StreamRequestMixin, _StreamResponseMixin, Call, _base_call.StreamStreamCall):
+class StreamStreamCall(_StreamRequestMixin[RequestType, ResponseType], _StreamResponseMixin[RequestType, ResponseType], Call[RequestType, ResponseType], _base_call.StreamStreamCall):
     def __init__(
         self,
         request_iterator: Optional[RequestIterableType],
@@ -160,7 +161,7 @@ class StreamStreamCall(_StreamRequestMixin, _StreamResponseMixin, Call, _base_ca
         wait_for_ready: Optional[bool],
         channel: cygrpc.AioChannel,
         method: bytes,
-        request_serializer: SerializingFunction,
-        response_deserializer: DeserializingFunction,
+        request_serializer: SerializingFunction[RequestType],
+        response_deserializer: DeserializingFunction[ResponseType],
         loop: asyncio.AbstractEventLoop
     ) -> None: ...

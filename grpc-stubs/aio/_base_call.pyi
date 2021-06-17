@@ -2,7 +2,7 @@ import grpc
 from ._metadata import Metadata
 from ._typing import DoneCallbackType, EOFType, RequestType, ResponseType
 from abc import ABCMeta, abstractmethod
-from typing import AsyncIterable, Awaitable, Optional, Union
+from typing import AsyncIterable, Awaitable, Generic, Optional, Union
 
 
 class RpcContext(metaclass=ABCMeta):
@@ -23,11 +23,15 @@ class RpcContext(metaclass=ABCMeta):
 
 
 class Call(RpcContext, metaclass=ABCMeta):
+
+    # TODO(@MHDante): the return type of the next 2 methods is inconsistent with the implementation
+    # typing, but is required in order to allow InterceptedCall to return optional Metadata.
+    # Upstream changes proposed: https://github.com/grpc/grpc/pull/26499
     @abstractmethod
-    async def initial_metadata(self) -> Metadata: ...
+    async def initial_metadata(self) -> Optional[Metadata]: ...
 
     @abstractmethod
-    async def trailing_metadata(self) -> Metadata: ...
+    async def trailing_metadata(self) -> Optional[Metadata]: ...
 
     @abstractmethod
     async def code(self) -> grpc.StatusCode: ...
@@ -39,12 +43,12 @@ class Call(RpcContext, metaclass=ABCMeta):
     async def wait_for_connection(self) -> None: ...
 
 
-class UnaryUnaryCall(Call, metaclass=ABCMeta):
+class UnaryUnaryCall(Generic[RequestType, ResponseType], Call, metaclass=ABCMeta):
     @abstractmethod
     def __await__(self) -> Awaitable[ResponseType]: ...
 
 
-class UnaryStreamCall(Call, metaclass=ABCMeta):
+class UnaryStreamCall(Generic[RequestType, ResponseType], Call, metaclass=ABCMeta):
     @abstractmethod
     def __aiter__(self) -> AsyncIterable[ResponseType]: ...
 
@@ -52,7 +56,7 @@ class UnaryStreamCall(Call, metaclass=ABCMeta):
     async def read(self) -> Union[EOFType, ResponseType]: ...
 
 
-class StreamUnaryCall(Call, metaclass=ABCMeta):
+class StreamUnaryCall(Generic[RequestType, ResponseType], Call, metaclass=ABCMeta):
     @abstractmethod
     async def write(self, request: RequestType) -> None: ...
 
@@ -64,7 +68,7 @@ class StreamUnaryCall(Call, metaclass=ABCMeta):
 
 
 
-class StreamStreamCall(Call, metaclass=ABCMeta):
+class StreamStreamCall(Generic[RequestType, ResponseType], Call, metaclass=ABCMeta):
     @abstractmethod
     def __aiter__(self) -> AsyncIterable[ResponseType]: ...
 
