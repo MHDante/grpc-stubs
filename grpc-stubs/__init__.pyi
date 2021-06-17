@@ -32,9 +32,8 @@ class LocalConnectionType(enum.Enum):
 # - https://github.com/grpc/grpc/blob/0e1984effd7e977ef18f1ad7fde7d10a2a153e1d/src/python/grpcio_tests/tests/unit/_metadata_test.py#L71
 # - https://github.com/grpc/grpc/blob/0e1984effd7e977ef18f1ad7fde7d10a2a153e1d/src/python/grpcio_tests/tests/unit/_metadata_test.py#L58
 # - https://github.com/grpc/grpc/blob/0e1984effd7e977ef18f1ad7fde7d10a2a153e1d/src/python/grpcio_tests/tests/unit/_invocation_defects_test.py#L66
-Metadata = typing.Tuple[
-    typing.Tuple[str, typing.Union[str, bytes]],
-    ...,
+Metadata = typing.Collection[
+    typing.Tuple[str, typing.Union[str, bytes]]
 ]
 
 
@@ -391,19 +390,10 @@ class ServerCertificateConfiguration:
 
 """gRPC Exceptions"""
 
-class _Metadatum:
-    key: str
-    value: bytes
-
-
 class RpcError(Exception):
-    def code(self) -> StatusCode: ...
-
-    # misnamed property, does not align with status.proto, where it is called 'message':
-    def details(self) -> str: ...
-
-    # XXX: This has a slightly different return type to all the other metadata:
-    def trailing_metadata(self) -> typing.Tuple[_Metadatum, ...]: ...
+    # the internal implementation of RPCError does not define any members. Usecases that show members are due to multiple inheritance.
+    # the documentation will indicate that the raised error also implements grpc.Call
+    pass
 
 
 """Shared Context"""
